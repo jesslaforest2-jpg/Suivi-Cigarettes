@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Cigarettes RAC">
 <meta name="theme-color" content="#1a4f7a">
+<link id="apple-touch-icon" rel="apple-touch-icon">
+<link id="pwa-manifest" rel="manifest">
+<link id="favicon" rel="icon" type="image/png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -560,9 +563,102 @@ function toast(msg){
   document.body.appendChild(el);setTimeout(()=>el.remove(),2800);
 }
 
+// ===== PWA ICON =====
+function setupPWA(){
+  function makeIcon(size){
+    const c=document.createElement('canvas');
+    c.width=size;c.height=size;
+    const ctx=c.getContext('2d');
+
+    // Fond bleu marine avec dégradé
+    const grad=ctx.createLinearGradient(0,0,size,size);
+    grad.addColorStop(0,'#2a6da8');
+    grad.addColorStop(1,'#0d3557');
+    const r=size*0.22;
+    ctx.beginPath();
+    ctx.moveTo(r,0);ctx.lineTo(size-r,0);ctx.arcTo(size,0,size,r,r);
+    ctx.lineTo(size,size-r);ctx.arcTo(size,size,size-r,size,r);
+    ctx.lineTo(r,size);ctx.arcTo(0,size,0,size-r,r);
+    ctx.lineTo(0,r);ctx.arcTo(0,0,r,0,r);
+    ctx.closePath();
+    ctx.fillStyle=grad;
+    ctx.fill();
+
+    // Cigarette stylisée (rectangle horizontal avec filtre)
+    const cx=size/2,cy=size*0.46;
+    const cw=size*0.56,ch=size*0.1;
+    // Corps blanc
+    ctx.fillStyle='#f8f9fa';
+    ctx.fillRect(cx-cw/2,cy-ch/2,cw*0.75,ch);
+    // Filtre orange/beige
+    ctx.fillStyle='#e8a54b';
+    ctx.fillRect(cx-cw/2+cw*0.75,cy-ch/2,cw*0.25,ch);
+    // Bande foncée entre corps et filtre
+    ctx.fillStyle='#c97f28';
+    ctx.fillRect(cx-cw/2+cw*0.75,cy-ch/2,cw*0.02,ch);
+    // Bout rougeoyant
+    ctx.fillStyle='#d64545';
+    ctx.fillRect(cx-cw/2,cy-ch/2,cw*0.05,ch);
+
+    // Fumée (3 petites boucles au-dessus)
+    ctx.strokeStyle='rgba(255,255,255,0.5)';
+    ctx.lineWidth=size*0.018;
+    ctx.lineCap='round';
+    const sx=cx-cw/2+cw*0.025;
+    ctx.beginPath();
+    ctx.moveTo(sx,cy-ch/2-size*0.02);
+    ctx.quadraticCurveTo(sx-size*0.04,cy-size*0.18,sx+size*0.02,cy-size*0.25);
+    ctx.quadraticCurveTo(sx+size*0.08,cy-size*0.32,sx-size*0.02,cy-size*0.38);
+    ctx.stroke();
+
+    // Texte "RAC" en bas
+    ctx.font=`bold ${size*0.15}px 'DM Sans', sans-serif`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(255,255,255,0.9)';
+    ctx.fillText('RAC',cx,size*0.78);
+
+    // Ligne décorative sous RAC
+    ctx.strokeStyle='rgba(255,255,255,0.3)';
+    ctx.lineWidth=size*0.008;
+    ctx.beginPath();
+    ctx.moveTo(size*0.35,size*0.88);
+    ctx.lineTo(size*0.65,size*0.88);
+    ctx.stroke();
+
+    return c.toDataURL('image/png');
+  }
+
+  const icon192=makeIcon(192);
+  const icon512=makeIcon(512);
+  const icon180=makeIcon(180);
+  const icon32=makeIcon(32);
+
+  document.getElementById('apple-touch-icon').href=icon180;
+  document.getElementById('favicon').href=icon32;
+
+  const manifest={
+    name:'Gestion Cigarettes — RAC',
+    short_name:'Cigarettes RAC',
+    description:'Gestion d\'inventaire et préparation de paniers',
+    start_url:'.',
+    display:'standalone',
+    orientation:'portrait',
+    background_color:'#1a4f7a',
+    theme_color:'#1a4f7a',
+    icons:[
+      {src:icon192,sizes:'192x192',type:'image/png',purpose:'any maskable'},
+      {src:icon512,sizes:'512x512',type:'image/png',purpose:'any maskable'}
+    ]
+  };
+  const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+  document.getElementById('pwa-manifest').href=URL.createObjectURL(blob);
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('hdate').textContent=new Date().toLocaleDateString('fr-CA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  setupPWA();
   load();renderStock();
 });
 </script>
